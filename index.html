@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHD Maps</title>
     <style>
-        /* Загружаем локальный шрифт */
         @font-face {
             font-family: 'CustomFont';
             src: url('font.ttf') format('truetype');
@@ -28,7 +27,6 @@
             min-height: 100vh;
         }
         
-        /* Полноэкранный скролл как ScrollView */
         #scrollView {
             position: fixed;
             top: 0;
@@ -55,7 +53,6 @@
             padding-bottom: 40px;
         }
         
-        /* Заголовок */
         .header {
             width: 100%;
             text-align: center;
@@ -70,7 +67,6 @@
             font-family: 'CustomFont', -apple-system, sans-serif;
         }
         
-        /* Карточка карты - точная копия Android LinearLayout */
         .map-card {
             width: calc(100% - 32px);
             max-width: 600px;
@@ -81,7 +77,6 @@
             padding: 16px;
         }
         
-        /* Контейнер для изображения как ImageView */
         .map-image-container {
             width: 100%;
             min-height: 180px;
@@ -94,7 +89,6 @@
             justify-content: center;
         }
         
-        /* Изображение карты - квадратное как в приложении */
         .map-image {
             width: 100%;
             height: auto;
@@ -102,7 +96,6 @@
             background-color: transparent;
         }
         
-        /* Название карты */
         .map-name {
             color: #FF4C4C;
             font-size: 24px;
@@ -113,7 +106,6 @@
             line-height: 1.2;
         }
         
-        /* Статус карты */
         .map-status {
             color: #FFFFFF;
             font-size: 18px;
@@ -122,7 +114,6 @@
             font-weight: 500;
         }
         
-        /* Таймер - совмещенный со статусом */
         .timer {
             font-family: 'Roboto Mono', monospace;
             font-size: 18px;
@@ -133,7 +124,6 @@
             display: inline;
         }
         
-        /* Контейнер для статуса с таймером в одной строке */
         .status-timer-container {
             color: #FFFFFF;
             font-size: 18px;
@@ -142,7 +132,6 @@
             font-weight: 500;
         }
         
-        /* Дата карты */
         .map-date {
             color: #BBBBBB;
             font-size: 16px;
@@ -150,7 +139,6 @@
             padding: 2px 0 8px 0;
         }
         
-        /* Android статус бар */
         .status-bar {
             position: fixed;
             top: 0;
@@ -161,7 +149,6 @@
             z-index: 1000;
         }
         
-        /* Для мобильных устройств */
         @media (max-width: 600px) {
             .map-card {
                 width: calc(100% - 32px);
@@ -206,18 +193,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Android статус бар -->
     <div class="status-bar"></div>
     
-    <!-- ScrollView как в Android -->
     <div class="scroll-view" id="scrollView">
         <div class="main-container" id="mainContainer">
-            <!-- Заголовок и карточки добавятся через JS -->
+
         </div>
     </div>
 
     <script>
-        // Данные карт из вашего приложения
         const mapNames = [
             "Штольня",
             "Лотос", 
@@ -235,56 +219,35 @@
             "Закрытое Сообщество"
         ];
 
-        // Получение пути к изображению карты
         function getMapImagePath(mapId) {
-            // Пробуем разные форматы изображений
             const extensions = ['.png', '.jpg', '.jpeg', '.webp'];
             
             for (const ext of extensions) {
-                const path = `map_${mapId}${ext}`;
-                // Проверяем существование файла
-                if (imageExists(path)) {
+                const path = `${mapId}${ext}`;
+                const img = new Image();
+                img.src = path;
+                if (img.complete || img.width > 0) {
                     return path;
                 }
             }
             
-            // Если изображение не найдено, используем заглушку
             return `https://via.placeholder.com/600x600/1a1a1a/FF4C4C?text=Map+${mapId}`;
         }
 
-        // Функция для проверки существования изображения
-        function imageExists(url) {
-            // В реальном приложении здесь была бы проверка файла
-            // Для упрощения предполагаем, что изображения есть
-            return true;
-        }
-
-        // Получение текущего индекса карты (точный алгоритм из вашего кода)
         function getCurrentMapIndex() {
             const now = new Date();
-            
-            // Получаем московское время
             const moscowTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
-            
-            // Базовая дата: 22 января 2025, 00:00 MSK
             const baseDate = new Date(Date.UTC(2025, 0, 21, 21, 0, 0));
-            
-            // Разница в миллисекундах
             const diff = moscowTime.getTime() - baseDate.getTime();
-            
-            // Дни с базовой даты
             let days = Math.floor(diff / (1000 * 60 * 60 * 24));
             
-            // Если сейчас 23:00 или позже по Москве, считаем следующий день
             if (moscowTime.getHours() >= 23) {
                 days++;
             }
             
-            // Возвращаем индекс текущей карты
             return (7 + days) % 14;
         }
 
-        // Форматирование даты как в приложении
         function formatDate(date) {
             const months = [
                 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
@@ -303,15 +266,12 @@
             return `${day} ${month}, ${weekday}`;
         }
 
-        // Расчет времени до активации карты (для каждой карты отдельно)
         function getTimeUntilMapActivation(mapPosition) {
             const now = new Date();
             const moscowNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
             
-            // Определяем дату активации этой карты
             let activationDate = new Date(moscowNow);
             
-            // Логика из вашего приложения
             if (moscowNow.getHours() < 23) {
                 activationDate.setDate(activationDate.getDate() + Math.max(0, mapPosition - 1));
             } else {
@@ -320,7 +280,6 @@
             
             activationDate.setHours(23, 0, 0, 0);
             
-            // Время до активации
             const diff = activationDate.getTime() - moscowNow.getTime();
             const seconds = Math.floor(diff / 1000);
             
@@ -338,14 +297,12 @@
             };
         }
 
-        // Получение даты активации карты
         function getMapActivationDate(position) {
             const now = new Date();
             const moscowNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
             
             const activationDate = new Date(moscowNow);
             
-            // Логика из вашего приложения
             if (moscowNow.getHours() < 23) {
                 activationDate.setDate(activationDate.getDate() + Math.max(0, position - 1));
             } else {
@@ -356,7 +313,6 @@
             return activationDate;
         }
 
-        // Создание карточки карты
         function createMapCard(mapIndex, position) {
             const mapId = mapIndex + 1;
             const mapName = mapNames[mapIndex];
@@ -368,10 +324,8 @@
             let statusHtml = '';
             
             if (position === 0) {
-                // Текущая карта - только "Сегодня"
                 statusHtml = '<div class="map-status">Сегодня</div>';
             } else {
-                // Будущие карты - "Через 00:00:00:00" в одной строке
                 const timeUntil = getTimeUntilMapActivation(position);
                 statusHtml = `
                     <div class="status-timer-container">
@@ -380,7 +334,6 @@
                 `;
             }
             
-            // Создаем HTML структуру как в вашем приложении
             return `
                 <div class="map-card" id="map-card-${mapId}">
                     <div class="map-image-container">
@@ -394,9 +347,7 @@
             `;
         }
 
-        // Обновление всех таймеров
         function updateAllTimers() {
-            // Обновляем таймеры для всех карт, кроме текущей (position > 0)
             for (let position = 1; position < 14; position++) {
                 const timeUntil = getTimeUntilMapActivation(position);
                 const mapIndex = (getCurrentMapIndex() + position) % 14;
@@ -409,11 +360,9 @@
             }
         }
 
-        // Инициализация приложения
         function initApp() {
             const mainContainer = document.getElementById('mainContainer');
             
-            // Добавляем заголовок как в вашем приложении
             const headerHtml = `
                 <div class="header">
                     <div class="header-text">Created by Cvieripe</div>
@@ -421,32 +370,25 @@
             `;
             mainContainer.innerHTML = headerHtml;
             
-            // Получаем текущий индекс карты
             const currentMapIndex = getCurrentMapIndex();
             
-            // Создаем карточки для 14 карт в правильном порядке
             for (let i = 0; i < 14; i++) {
                 const mapIndex = (currentMapIndex + i) % 14;
                 const cardHtml = createMapCard(mapIndex, i);
                 mainContainer.innerHTML += cardHtml;
             }
             
-            // Запускаем обновление таймеров
             setInterval(updateAllTimers, 1000);
             
-            // Обновляем таймеры сразу
             updateAllTimers();
             
-            // Прокручиваем к началу
             setTimeout(() => {
                 document.getElementById('scrollView').scrollTop = 0;
             }, 100);
         }
 
-        // Запуск приложения при загрузке
         document.addEventListener('DOMContentLoaded', initApp);
         
-        // Обработка ошибок загрузки изображений
         window.addEventListener('error', function(e) {
             if (e.target.tagName === 'IMG') {
                 e.target.src = 'https://via.placeholder.com/600x600/1a1a1a/FF4C4C?text=Image+Error';
