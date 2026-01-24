@@ -79,7 +79,7 @@
         
         .map-image-container {
             width: 100%;
-            min-height: 180px; /* Оригинальная высота */
+            min-height: 180px;
             border-radius: 0;
             overflow: hidden;
             background-color: transparent;
@@ -91,8 +91,8 @@
         
         .map-image {
             width: 100%;
-            height: auto; /* Оригинальная настройка */
-            object-fit: contain; /* Оригинальная настройка */
+            height: auto;
+            object-fit: contain;
             background-color: transparent;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -155,10 +155,9 @@
             z-index: 1000;
         }
         
-        /* Стиль для прелоадера изображений */
         .image-placeholder {
             width: 100%;
-            height: 180px; /* Оригинальная высота */
+            height: 180px;
             background: linear-gradient(90deg, #1a0000 25%, #2a0000 50%, #1a0000 75%);
             background-size: 400% 100%;
             animation: loading 1.5s infinite;
@@ -240,16 +239,12 @@
             "Закрытое Сообщество"
         ];
 
-        // Функция для получения пути к изображению
         function getMapImagePath(mapId) {
             const baseUrl = window.location.origin + window.location.pathname;
             const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
-            
-            // Прямые пути к изображениям на GitHub Pages
             return `${baseDir}/${mapId}.png`;
         }
 
-        // ПРЕДЗАГРУЗКА ВСЕХ ИЗОБРАЖЕНИЙ ПЕРЕД ПОКАЗОМ СТРАНИЦЫ
         function preloadAllImages() {
             const imagesToPreload = [];
             
@@ -264,7 +259,7 @@
                 imagesToPreload.map(img => {
                     return new Promise((resolve, reject) => {
                         img.onload = resolve;
-                        img.onerror = resolve; // Не реджектим, чтобы страница загрузилась в любом случае
+                        img.onerror = resolve;
                     });
                 })
             );
@@ -307,13 +302,7 @@
             const moscowNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
             
             let activationDate = new Date(moscowNow);
-            
-            if (moscowNow.getHours() < 23) {
-                activationDate.setDate(activationDate.getDate() + Math.max(0, mapPosition - 1));
-            } else {
-                activationDate.setDate(activationDate.getDate() + mapPosition);
-            }
-            
+            activationDate.setDate(activationDate.getDate() + mapPosition);
             activationDate.setHours(23, 0, 0, 0);
             
             const diff = activationDate.getTime() - moscowNow.getTime();
@@ -338,13 +327,7 @@
             const moscowNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
             
             const activationDate = new Date(moscowNow);
-            
-            if (moscowNow.getHours() < 23) {
-                activationDate.setDate(activationDate.getDate() + Math.max(0, position - 1));
-            } else {
-                activationDate.setDate(activationDate.getDate() + position);
-            }
-            
+            activationDate.setDate(activationDate.getDate() + position);
             activationDate.setHours(23, 0, 0, 0);
             return activationDate;
         }
@@ -402,17 +385,14 @@
         async function initApp() {
             const mainContainer = document.getElementById('mainContainer');
             
-            // Показываем заголовк сразу
             mainContainer.innerHTML = `
                 <div class="header">
                     <div class="header-text">Created by Cvieripe</div>
                 </div>
             `;
             
-            // Начинаем предзагрузку изображений в фоне
             preloadAllImages();
             
-            // Создаем карточки
             const currentMapIndex = getCurrentMapIndex();
             
             for (let i = 0; i < 14; i++) {
@@ -421,23 +401,19 @@
                 mainContainer.innerHTML += cardHtml;
             }
             
-            // Запускаем таймеры
             setInterval(updateAllTimers, 1000);
             updateAllTimers();
             
-            // Принудительная проверка загрузки изображений через 2 секунды
             setTimeout(() => {
                 for (let i = 1; i <= 14; i++) {
                     const img = document.getElementById(`img-${i}`);
                     if (img && img.naturalWidth === 0) {
-                        // Изображение не загрузилось, пробуем перезагрузить
                         const originalSrc = img.src;
                         img.src = originalSrc + (originalSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
                     }
                 }
             }, 2000);
             
-            // Еще одна проверка через 5 секунд
             setTimeout(() => {
                 for (let i = 1; i <= 14; i++) {
                     const img = document.getElementById(`img-${i}`);
@@ -450,14 +426,12 @@
             }, 5000);
         }
 
-        // Ждем полной загрузки DOM
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initApp);
         } else {
             initApp();
         }
         
-        // Добавляем перезагрузку изображений при фокусе окна
         window.addEventListener('focus', function() {
             setTimeout(() => {
                 document.querySelectorAll('.map-image').forEach(img => {
