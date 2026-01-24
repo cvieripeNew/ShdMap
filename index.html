@@ -95,6 +95,12 @@
             max-height: 300px;
             object-fit: contain;
             background-color: transparent;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .map-image.loaded {
+            opacity: 1;
         }
         
         .map-name {
@@ -150,6 +156,21 @@
             z-index: 1000;
         }
         
+        /* Стиль для прелоадера изображений */
+        .image-placeholder {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(90deg, #1a0000 25%, #2a0000 50%, #1a0000 75%);
+            background-size: 400% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
         @media (max-width: 600px) {
             .map-card {
                 width: calc(100% - 32px);
@@ -190,18 +211,6 @@
                 font-size: 16px;
             }
         }
-        
-        /* Стиль для прелоадера */
-        .image-loading {
-            background: linear-gradient(90deg, #2A0000 25%, #3A0000 50%, #2A0000 75%);
-            background-size: 400% 100%;
-            animation: loading 1.5s infinite;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
@@ -232,48 +241,42 @@
             "Закрытое Сообщество"
         ];
 
-        // Прямые ссылки на изображения (замени на свои реальные пути)
-        const mapImages = {
-            1: '1.png',
-            2: '2.png',
-            3: '3.png',
-            4: '4.png',
-            5: '5.png',
-            6: '6.png',
-            7: '7.png',
-            8: '8.png',
-            9: '9.png',
-            10: '10.png',
-            11: '11.png',
-            12: '12.png',
-            13: '13.png',
-            14: '14.png'
-        };
-
+        // Функция для получения пути к изображению с кэшированием
         function getMapImagePath(mapId) {
-            // Попробуем несколько вариантов
             const baseUrl = window.location.origin + window.location.pathname;
-            const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf('/')) || baseUrl;
+            const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
             
-            // Вариант 1: Прямой путь
-            if (mapImages[mapId]) {
-                const img = new Image();
-                img.src = mapImages[mapId];
-                return mapImages[mapId];
-            }
-            
-            // Вариант 2: Относительный путь
+            // Попробуй разные форматы
             const extensions = ['.png', '.jpg', '.jpeg', '.webp'];
+            
+            // Для GitHub Pages попробуем прямые пути
             for (const ext of extensions) {
-                const path = `${mapId}${ext}`;
-                const img = new Image();
-                img.src = path;
-                img.crossOrigin = "anonymous";
-                return path; // Просто возвращаем путь, проверка будет позже
+                const path = `${baseDir}/${mapId}${ext}`;
+                return path;
             }
             
-            // Запасной вариант
-            return `https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${mapId}`;
+            return `${baseDir}/${mapId}.png`;
+        }
+
+        // ПРЕДЗАГРУЗКА ВСЕХ ИЗОБРАЖЕНИЙ ПЕРЕД ПОКАЗОМ СТРАНИЦЫ
+        function preloadAllImages() {
+            const imagesToPreload = [];
+            
+            for (let i = 1; i <= 14; i++) {
+                const img = new Image();
+                img.src = getMapImagePath(i);
+                img.crossOrigin = "anonymous";
+                imagesToPreload.push(img);
+            }
+            
+            return Promise.all(
+                imagesToPreload.map(img => {
+                    return new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = resolve; // Не реджектим, чтобы страница загрузилась в любом случае
+                    });
+                })
+            );
         }
 
         function getCurrentMapIndex() {
@@ -379,10 +382,11 @@
             return `
                 <div class="map-card" id="map-card-${mapId}">
                     <div class="map-image-container">
-                        <img src="${imagePath}" alt="${mapName}" class="map-image image-loading" 
-                             data-src="${imagePath}"
-                             onload="this.classList.remove('image-loading')"
-                             onerror="this.onerror=null; this.classList.remove('image-loading'); this.src='https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${mapId}'">
+                        <div class="image-placeholder" id="placeholder-${mapId}"></div>
+                        <img src="${imagePath}" alt="${mapName}" class="map-image" 
+                             id="img-${mapId}"
+                             onload="document.getElementById('placeholder-${mapId}').style.display='none'; this.classList.add('loaded')"
+                             onerror="this.style.display='none'; document.getElementById('placeholder-${mapId}').style.background='#1a0000'; document.getElementById('placeholder-${mapId}').innerHTML='<div style=\\'color:#ff4c4c;text-align:center;padding-top:70px;\\'>Ошибка загрузки</div>'; document.getElementById('placeholder-${mapId}').style.animation='none'">
                     </div>
                     <div class="map-name">${mapName}</div>
                     ${statusHtml}
@@ -404,33 +408,20 @@
             }
         }
 
-        function preloadImages() {
-            const images = document.querySelectorAll('img[data-src]');
-            images.forEach(img => {
-                const src = img.getAttribute('data-src');
-                const tempImg = new Image();
-                tempImg.onload = function() {
-                    img.src = src;
-                    img.classList.remove('image-loading');
-                };
-                tempImg.onerror = function() {
-                    img.src = `https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${img.alt.match(/\d+/)?.[0] || '?'}`;
-                    img.classList.remove('image-loading');
-                };
-                tempImg.src = src;
-            });
-        }
-
-        function initApp() {
+        async function initApp() {
             const mainContainer = document.getElementById('mainContainer');
             
-            const headerHtml = `
+            // Показываем заголовк сразу
+            mainContainer.innerHTML = `
                 <div class="header">
                     <div class="header-text">Created by Cvieripe</div>
                 </div>
             `;
-            mainContainer.innerHTML = headerHtml;
             
+            // Начинаем предзагрузку изображений в фоне
+            preloadAllImages();
+            
+            // Создаем карточки
             const currentMapIndex = getCurrentMapIndex();
             
             for (let i = 0; i < 14; i++) {
@@ -439,37 +430,53 @@
                 mainContainer.innerHTML += cardHtml;
             }
             
-            // Предзагрузка изображений с задержкой
-            setTimeout(preloadImages, 100);
-            
+            // Запускаем таймеры
             setInterval(updateAllTimers, 1000);
-            
             updateAllTimers();
             
-            // Принудительная перезагрузка изображений при фокусе
-            window.addEventListener('focus', function() {
-                setTimeout(preloadImages, 500);
-            });
-            
-            // Попытка перезагрузить изображения если они не загрузились
+            // Принудительная проверка загрузки изображений через 2 секунды
             setTimeout(() => {
-                const failedImages = document.querySelectorAll('.image-loading');
-                failedImages.forEach(img => {
-                    img.src = img.getAttribute('data-src') + '?t=' + Date.now();
-                });
-            }, 3000);
+                for (let i = 1; i <= 14; i++) {
+                    const img = document.getElementById(`img-${i}`);
+                    if (img && img.naturalWidth === 0) {
+                        // Изображение не загрузилось, пробуем перезагрузить
+                        const originalSrc = img.src;
+                        img.src = originalSrc + (originalSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    }
+                }
+            }, 2000);
+            
+            // Еще одна проверка через 5 секунд
+            setTimeout(() => {
+                for (let i = 1; i <= 14; i++) {
+                    const img = document.getElementById(`img-${i}`);
+                    const placeholder = document.getElementById(`placeholder-${i}`);
+                    if (img && img.naturalWidth === 0 && placeholder) {
+                        placeholder.style.display = 'block';
+                        img.style.display = 'none';
+                    }
+                }
+            }, 5000);
         }
 
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Ждем полной загрузки DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
         
-        // Обработка ошибок загрузки изображений
-        window.addEventListener('error', function(e) {
-            if (e.target.tagName === 'IMG') {
-                const mapId = e.target.alt.match(/\d+/)?.[0] || '?';
-                e.target.src = `https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${mapId}`;
-                e.target.classList.remove('image-loading');
-            }
-        }, true);
+        // Добавляем перезагрузку изображений при фокусе окна
+        window.addEventListener('focus', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.map-image').forEach(img => {
+                    if (img.naturalWidth === 0) {
+                        const originalSrc = img.src;
+                        img.src = originalSrc + (originalSrc.includes('?') ? '&' : '?') + 't=' + Date.now();
+                    }
+                });
+            }, 100);
+        });
     </script>
 </body>
 </html>
