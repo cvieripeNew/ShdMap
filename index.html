@@ -92,6 +92,7 @@
         .map-image {
             width: 100%;
             height: auto;
+            max-height: 300px;
             object-fit: contain;
             background-color: transparent;
         }
@@ -189,6 +190,18 @@
                 font-size: 16px;
             }
         }
+        
+        /* Стиль для прелоадера */
+        .image-loading {
+            background: linear-gradient(90deg, #2A0000 25%, #3A0000 50%, #2A0000 75%);
+            background-size: 400% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
@@ -219,19 +232,48 @@
             "Закрытое Сообщество"
         ];
 
+        // Прямые ссылки на изображения (замени на свои реальные пути)
+        const mapImages = {
+            1: '1.png',
+            2: '2.png',
+            3: '3.png',
+            4: '4.png',
+            5: '5.png',
+            6: '6.png',
+            7: '7.png',
+            8: '8.png',
+            9: '9.png',
+            10: '10.png',
+            11: '11.png',
+            12: '12.png',
+            13: '13.png',
+            14: '14.png'
+        };
+
         function getMapImagePath(mapId) {
-            const extensions = ['.png', '.jpg', '.jpeg', '.webp'];
+            // Попробуем несколько вариантов
+            const baseUrl = window.location.origin + window.location.pathname;
+            const baseDir = baseUrl.substring(0, baseUrl.lastIndexOf('/')) || baseUrl;
             
+            // Вариант 1: Прямой путь
+            if (mapImages[mapId]) {
+                const img = new Image();
+                img.src = mapImages[mapId];
+                return mapImages[mapId];
+            }
+            
+            // Вариант 2: Относительный путь
+            const extensions = ['.png', '.jpg', '.jpeg', '.webp'];
             for (const ext of extensions) {
                 const path = `${mapId}${ext}`;
                 const img = new Image();
                 img.src = path;
-                if (img.complete || img.width > 0) {
-                    return path;
-                }
+                img.crossOrigin = "anonymous";
+                return path; // Просто возвращаем путь, проверка будет позже
             }
             
-            return `https://via.placeholder.com/600x600/1a1a1a/FF4C4C?text=Map+${mapId}`;
+            // Запасной вариант
+            return `https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${mapId}`;
         }
 
         function getCurrentMapIndex() {
@@ -337,8 +379,10 @@
             return `
                 <div class="map-card" id="map-card-${mapId}">
                     <div class="map-image-container">
-                        <img src="${imagePath}" alt="${mapName}" class="map-image" 
-                             onerror="this.onerror=null; this.src='https://via.placeholder.com/600x600/1a1a1a/FF4C4C?text=Map+${mapId}'">
+                        <img src="${imagePath}" alt="${mapName}" class="map-image image-loading" 
+                             data-src="${imagePath}"
+                             onload="this.classList.remove('image-loading')"
+                             onerror="this.onerror=null; this.classList.remove('image-loading'); this.src='https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${mapId}'">
                     </div>
                     <div class="map-name">${mapName}</div>
                     ${statusHtml}
@@ -360,6 +404,23 @@
             }
         }
 
+        function preloadImages() {
+            const images = document.querySelectorAll('img[data-src]');
+            images.forEach(img => {
+                const src = img.getAttribute('data-src');
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    img.src = src;
+                    img.classList.remove('image-loading');
+                };
+                tempImg.onerror = function() {
+                    img.src = `https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${img.alt.match(/\d+/)?.[0] || '?'}`;
+                    img.classList.remove('image-loading');
+                };
+                tempImg.src = src;
+            });
+        }
+
         function initApp() {
             const mainContainer = document.getElementById('mainContainer');
             
@@ -378,20 +439,35 @@
                 mainContainer.innerHTML += cardHtml;
             }
             
+            // Предзагрузка изображений с задержкой
+            setTimeout(preloadImages, 100);
+            
             setInterval(updateAllTimers, 1000);
             
             updateAllTimers();
             
+            // Принудительная перезагрузка изображений при фокусе
+            window.addEventListener('focus', function() {
+                setTimeout(preloadImages, 500);
+            });
+            
+            // Попытка перезагрузить изображения если они не загрузились
             setTimeout(() => {
-                document.getElementById('scrollView').scrollTop = 0;
-            }, 100);
+                const failedImages = document.querySelectorAll('.image-loading');
+                failedImages.forEach(img => {
+                    img.src = img.getAttribute('data-src') + '?t=' + Date.now();
+                });
+            }, 3000);
         }
 
         document.addEventListener('DOMContentLoaded', initApp);
         
+        // Обработка ошибок загрузки изображений
         window.addEventListener('error', function(e) {
             if (e.target.tagName === 'IMG') {
-                e.target.src = 'https://via.placeholder.com/600x600/1a1a1a/FF4C4C?text=Image+Error';
+                const mapId = e.target.alt.match(/\d+/)?.[0] || '?';
+                e.target.src = `https://via.placeholder.com/600x300/2A0000/FF4C4C?text=Map+${mapId}`;
+                e.target.classList.remove('image-loading');
             }
         }, true);
     </script>
