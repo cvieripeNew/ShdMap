@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShdMap</title>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ShdMap</title>
 <style>
-@font-face{font-family:'CustomFont';src:url('font.ttf') format('truetype');font-weight:normal;font-style:normal;}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+@font-face{font-family:'F';src:url('font.ttf') format('truetype');font-weight:400;font-style:normal;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:rgba(0,0,0,0);}
 body{background:#000;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#fff;overflow-x:hidden;min-height:100vh;}
-#scrollView{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;background:#000;}
-#scrollView::-webkit-scrollbar{display:none;}
-#mainContainer{width:100%;display:flex;flex-direction:column;align-items:center;padding-top:24px;padding-bottom:40px;}
-.header{width:100%;text-align:center;padding:24px 0 8px;}
-.header-text{color:#fff;font-size:36px;font-weight:400;letter-spacing:0.5px;font-family:'CustomFont',-apple-system,sans-serif;}
-.map-card{width:calc(100% - 32px);max-width:600px;background:#2A0000;border:2px solid #7A0000;border-radius:20px;margin:16px;padding:16px;}
-.map-image-container{width:100%;min-height:180px;border-radius:0;overflow:hidden;background:transparent;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
-.map-image{width:100%;height:auto;object-fit:contain;background:transparent;opacity:0;transition:opacity 0.3s ease;}
-.map-image.loaded{opacity:1;}
-.map-name{color:#FF4C4C;font-size:24px;font-weight:700;text-align:center;margin-bottom:12px;padding:0;line-height:1.2;}
-.map-status{color:#fff;font-size:18px;text-align:center;margin-bottom:4px;font-weight:500;}
-.timer{font-family:'Roboto Mono',monospace;font-size:18px;color:#fff;text-align:center;margin:4px 0;font-variant-numeric:tabular-nums;display:inline;}
-.status-timer-container{color:#fff;font-size:18px;text-align:center;margin-bottom:4px;font-weight:500;}
-.map-date{color:#BBB;font-size:16px;text-align:center;padding:2px 0 8px;}
-.status-bar{position:fixed;top:0;left:0;right:0;height:24px;background:#000;z-index:1000;}
-.image-placeholder{width:100%;height:180px;background:linear-gradient(90deg,#1a0000 25%,#2a0000 50%,#1a0000 75%);background-size:400% 100%;animation:loading 1.5s infinite;border-radius:8px;}
-@keyframes loading{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-@media (max-width:600px){.map-card{width:calc(100% - 32px);margin:16px;}.header-text{font-size:36px;}.map-name{font-size:24px;}}
-@media (max-width:400px){.header-text{font-size:32px;}.map-name{font-size:22px;}.map-status,.status-timer-container{font-size:16px;}.timer{font-size:16px;}.map-date{font-size:14px;}}
+#s{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;}
+#s::-webkit-scrollbar{display:none;}
+#m{width:100%;display:flex;flex-direction:column;align-items:center;padding-top:24px;padding-bottom:40px;}
+.h{width:100%;text-align:center;padding:24px 0 8px;}
+.ht{color:#fff;font-size:36px;font-weight:400;letter-spacing:0.5px;font-family:'F',-apple-system,sans-serif;}
+.c{width:calc(100% - 32px);max-width:600px;background:#2A0000;border:2px solid #7A0000;border-radius:20px;margin:16px;padding:16px;}
+.i{width:100%;min-height:180px;border-radius:0;overflow:hidden;background:transparent;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
+.im{width:100%;height:auto;object-fit:contain;background:transparent;opacity:0;transition:opacity 0.3s ease;}
+.im.l{opacity:1;}
+.n{color:#FF4C4C;font-size:24px;font-weight:700;text-align:center;margin-bottom:12px;padding:0;line-height:1.2;}
+.s{color:#fff;font-size:18px;text-align:center;margin-bottom:4px;font-weight:500;}
+.t{font-family:'Roboto Mono',monospace;font-size:18px;color:#fff;text-align:center;margin:4px 0;font-variant-numeric:tabular-nums;display:inline;}
+.st{color:#fff;font-size:18px;text-align:center;margin-bottom:4px;font-weight:500;}
+.d{color:#BBB;font-size:16px;text-align:center;padding:2px 0 8px;}
+.b{position:fixed;top:0;left:0;right:0;height:24px;background:#000;z-index:1000;}
+.p{width:100%;height:180px;background:linear-gradient(90deg,#1a0000 25%,#2a0000 50%,#1a0000 75%);background-size:400% 100%;animation:l 1.5s infinite;border-radius:8px;}
+@keyframes l{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+@media (max-width:600px){.c{width:calc(100% - 32px);margin:16px;}.ht{font-size:36px;}.n{font-size:24px;}}
+@media (max-width:400px){.ht{font-size:32px;}.n{font-size:22px;}.s,.st{font-size:16px;}.t{font-size:16px;}.d{font-size:14px;}}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="status-bar"></div>
-<div class="scroll-view" id="scrollView">
-<div class="main-container" id="mainContainer"></div>
-</div>
+<div class="b"></div>
+<div class="scroll-view" id="s"><div class="main-container" id="m"></div></div>
 <script>
-const mapNames=["Штольня","Лотос","Крокет","Всё или Ничего","Полёт Фантазии","Лесные Лилии","Станция «Северный Парк»","Запутанная Лоза","Убежище","Озеро Мертвецов","Строительные Леса","Замок Кристального ока","Тысяча Озёр","Закрытое Сообщество"];
-function g(m){const b=window.location.origin+window.location.pathname,d=b.substring(0,b.lastIndexOf('/'));return `${d}/${m}.png`;}
-function p(){const i=[];for(let m=1;m<=14;m++){const n=new Image();n.src=g(m);n.crossOrigin="anonymous";i.push(n);}return Promise.all(i.map(n=>new Promise((r,e)=>{n.onload=r;n.onerror=r;})));}
-function c(){const n=new Date(),m=new Date(n.toLocaleString("en-US",{timeZone:"Europe/Moscow"})),b=new Date(Date.UTC(2025,0,21,21,0,0)),d=m.getTime()-b.getTime();let a=Math.floor(d/(1000*60*60*24));if(m.getHours()>=23)a++;return(7+a)%14;}
-function f(d){const m=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],w=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];return `${d.getDate()} ${m[d.getMonth()]}, ${w[d.getDay()]}`;}
-function t(p){const n=new Date(),m=new Date(n.toLocaleString("en-US",{timeZone:"Europe/Moscow"}));let a=new Date(m);a.setDate(a.getDate()+p);a.setHours(23,0,0,0);const s=Math.floor((a.getTime()-m.getTime())/1000),d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),mi=Math.floor((s%3600)/60),se=s%60;return{d:d.toString().padStart(2,'0'),h:h.toString().padStart(2,'0'),m:mi.toString().padStart(2,'0'),s:se.toString().padStart(2,'0'),f:`${d.toString().padStart(2,'0')}:${h.toString().padStart(2,'0')}:${mi.toString().padStart(2,'0')}:${se.toString().padStart(2,'0')}`};}
-function a(p){const n=new Date(),m=new Date(n.toLocaleString("en-US",{timeZone:"Europe/Moscow"}));let d=new Date(m);d.setDate(d.getDate()+p);d.setHours(23,0,0,0);return d;}
-function C(i,p){const m=i+1,n=mapNames[i],x=g(m),d=a(p),dt=f(d);let s='';if(p===0)s='<div class="map-status">Сегодня</div>';else{const t0=t(p);s=`<div class="status-timer-container">Через <span class="timer" id="timer-${m}">${t0.f}</span></div>`;}return `<div class="map-card" id="map-card-${m}"><div class="map-image-container"><div class="image-placeholder" id="placeholder-${m}"></div><img src="${x}" alt="${n}" class="map-image" id="img-${m}" onload="document.getElementById('placeholder-${m}').style.display='none'; this.classList.add('loaded')" onerror="this.style.display='none'; document.getElementById('placeholder-${m}').style.background='#1a0000'; document.getElementById('placeholder-${m}').innerHTML='<div style=\'color:#ff4c4c;text-align:center;padding-top:70px;\'>Ошибка загрузки</div>'; document.getElementById('placeholder-${m}').style.animation='none'"></div><div class="map-name">${n}</div>${s}<div class="map-date">${dt}</div></div>`;}
-function u(){for(let p=1;p<14;p++){const t0=t(p),i=(c()+p)%14,m=i+1,e=document.getElementById(`timer-${m}`);if(e)e.textContent=t0.f;}}
-async function i(){const m=document.getElementById('mainContainer');m.innerHTML=`<div class="header"><div class="header-text">Created by Cvieripe</div></div>`;p();const x=c();for(let i=0;i<14;i++){const a=(x+i)%14;m.innerHTML+=C(a,i);}setInterval(u,1000);u();setTimeout(()=>{for(let i=1;i<=14;i++){const m=document.getElementById(`img-${i}`);if(m&&m.naturalWidth===0){const s=m.src;m.src=s+(s.includes('?')?'&':'?')+'t='+Date.now();}}},2000);setTimeout(()=>{for(let i=1;i<=14;i++){const m=document.getElementById(`img-${i}`),p=document.getElementById(`placeholder-${i}`);if(m&&m.naturalWidth===0&&p){p.style.display='block';m.style.display='none';}}},5000);}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',i);else i();
-window.addEventListener('focus',()=>{setTimeout(()=>{document.querySelectorAll('.map-image').forEach(m=>{if(m.naturalWidth===0){const s=m.src;m.src=s+(s.includes('?')?'&':'?')+'t='+Date.now();}});},100);});
+const _0x2b9e=['Штольня','Лотос','Крокет','Всё или Ничего','Полёт Фантазии','Лесные Лилии','Станция «Северный Парк»','Запутанная Лоза','Убежище','Озеро Мертвецов','Строительные Леса','Замок Кристального ока','Тысяча Озёр','Закрытое Сообщество'];
+function _0x3a7c(_0x5b8d){const _0x1b34=window.location.origin+window.location.pathname,_0x30a2=_0x1b34.substring(0,_0x1b34.lastIndexOf('/'));return`${_0x30a2}/${_0x5b8d}.png`;}
+function _0x4f6a(){const _0x5a98=[];for(let _0x3e72=1;_0x3e72<=14;_0x3e72++){const _0x1c94=new Image();_0x1c94.src=_0x3a7c(_0x3e72);_0x1c94.crossOrigin='anonymous';_0x5a98.push(_0x1c94);}return Promise['all'](_0x5a98['map'](_0x2d7e=>new Promise((_0x5c37,_0x2a1d)=>{_0x2d7e['onload']=_0x5c37;_0x2d7e['onerror']=_0x5c37;})));}
+function _0x5839(){const _0x4965=new Date(),_0x32ab=new Date(_0x4965['toLocaleString']('en-US',{'timeZone':'Europe/Moscow'})),_0x4d8b=new Date(Date['UTC'](2025,0,21,21,0,0)),_0x5e24=_0x32ab['getTime']()-_0x4d8b['getTime']();let _0x2ffd=Math['floor'](_0x5e24/(1000*60*60*24));if(_0x32ab['getHours']()>=23)_0x2ffd++;return(7+_0x2ffd)%14;}
+function _0x5c1d(_0x187d){const _0x2479=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'],_0x3e42=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];return`${_0x187d['getDate']()} ${_0x2479[_0x187d['getMonth']()]}, ${_0x3e42[_0x187d['getDay']()]}`;}
+function _0x2ef1(_0x3c50){const _0x46a7=new Date(),_0x4e0c=new Date(_0x46a7['toLocaleString']('en-US',{'timeZone':'Europe/Moscow'}));let _0x5d44=new Date(_0x4e0c);_0x5d44['setDate'](_0x5d44['getDate']()+_0x3c50-1);_0x5d44['setHours'](23,0,0,0);const _0x5a30=Math['floor']((_0x5d44['getTime']()-_0x4e0c['getTime']())/1000),_0x2a2d=Math['floor'](_0x5a30/86400),_0x1b32=Math['floor']((_0x5a30%86400)/3600),_0x5b79=Math['floor']((_0x5a30%3600)/60),_0x5938=_0x5a30%60;return{'d':_0x2a2d['toString']()['padStart'](2,'0'),'h':_0x1b32['toString']()['padStart'](2,'0'),'m':_0x5b79['toString']()['padStart'](2,'0'),'s':_0x5938['toString']()['padStart'](2,'0'),'f':`${_0x2a2d['toString']()['padStart'](2,'0')}:${_0x1b32['toString']()['padStart'](2,'0')}:${_0x5b79['toString']()['padStart'](2,'0')}:${_0x5938['toString']()['padStart'](2,'0')}`};}
+function _0x1987(_0x2a90){const _0x1e8c=new Date(),_0x38df=new Date(_0x1e8c['toLocaleString']('en-US',{'timeZone':'Europe/Moscow'}));let _0x5b8a=new Date(_0x38df);_0x5b8a['setDate'](_0x5b8a['getDate']()+_0x2a90);_0x5b8a['setHours'](23,0,0,0);return _0x5b8a;}
+function _0x14d8(_0x2f4b,_0x3c50){const _0x5e82=_0x2f4b+1,_0x5a9e=_0x2b9e[_0x2f4b],_0x4378=_0x3a7c(_0x5e82),_0x4f6c=_0x1987(_0x3c50),_0x3a12=_0x5c1d(_0x4f6c);let _0x2e5f='';if(_0x3c50===0)_0x2e5f='<div class="s">Сегодня</div>';else{const _0x44b8=_0x2ef1(_0x3c50);_0x2e5f=`<div class="st">Через <span class="t" id="t-${_0x5e82}">${_0x44b8['f']}</span></div>`;}return `<div class="c" id="c-${_0x5e82}"><div class="i"><div class="p" id="p-${_0x5e82}"></div><img src="${_0x4378}" alt="${_0x5a9e}" class="im" id="i-${_0x5e82}" onload="document.getElementById('p-${_0x5e82}').style.display='none'; this.classList.add('l')" onerror="this.style.display='none'; document.getElementById('p-${_0x5e82}').style.background='#1a0000'; document.getElementById('p-${_0x5e82}').innerHTML='<div style=\'color:#ff4c4c;text-align:center;padding-top:70px;\'>Ошибка</div>'; document.getElementById('p-${_0x5e82}').style.animation='none'"></div><div class="n">${_0x5a9e}</div>${_0x2e5f}<div class="d">${_0x3a12}</div></div>`;}
+function _0x1a6b(){for(let _0x2f4b=1;_0x2f4b<14;_0x2f4b++){const _0x44b8=_0x2ef1(_0x2f4b),_0x5e82=(_0x5839()+_0x2f4b)%14+1,_0x556e=document['getElementById'](`t-${_0x5e82}`);if(_0x556e)_0x556e['textContent']=_0x44b8['f'];}}
+async function _0x34cd(){const _0x556e=document['getElementById']('m');_0x556e['innerHTML']=`<div class="h"><div class="ht">Created by Cvieripe</div></div>`;_0x4f6a();const _0x2a90=_0x5839();for(let _0x2f4b=0;_0x2f4b<14;_0x2f4b++){const _0x5e82=(_0x2a90+_0x2f4b)%14;_0x556e['innerHTML']+=_0x14d8(_0x5e82,_0x2f4b);}setInterval(_0x1a6b,1000);_0x1a6b();setTimeout(()=>{for(let _0x2f4b=1;_0x2f4b<=14;_0x2f4b++){const _0x556e=document['getElementById'](`i-${_0x2f4b}`);if(_0x556e&&_0x556e['naturalWidth']===0){const _0x4378=_0x556e['src'];_0x556e['src']=_0x4378+(_0x4378['includes']('?')?'&':'?')+'t='+Date['now']();}}},2000);setTimeout(()=>{for(let _0x2f4b=1;_0x2f4b<=14;_0x2f4b++){const _0x556e=document['getElementById'](`i-${_0x2f4b}`),_0x1987=document['getElementById'](`p-${_0x2f4b}`);if(_0x556e&&_0x556e['naturalWidth']===0&&_0x1987){_0x1987['style']['display']='block';_0x556e['style']['display']='none';}}},5000);}
+if(document['readyState']==='loading')document['addEventListener']('DOMContentLoaded',_0x34cd);else _0x34cd();
+window['addEventListener']('focus',()=>{setTimeout(()=>{document['querySelectorAll']('.im')['forEach'](_0x556e=>{if(_0x556e['naturalWidth']===0){const _0x4378=_0x556e['src'];_0x556e['src']=_0x4378+(_0x4378['includes']('?')?'&':'?')+'t='+Date['now']();}});},100);});
 </script>
 </body>
 </html>
