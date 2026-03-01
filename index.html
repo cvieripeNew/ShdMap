@@ -30,12 +30,14 @@
       user-select:none;
       -webkit-touch-callout:none;
 
-      /* ВАЖНО: чтобы при оверскролле не светилось белым */
-      background: radial-gradient(1200px 700px at 50% -10%, rgba(255, 23, 68, .18), transparent 55%),
-                  radial-gradient(900px 600px at 20% 110%, rgba(177, 0, 36, .20), transparent 60%),
-                  linear-gradient(180deg, var(--bg), var(--bg2));
+      /* чтобы при оверскролле не светилось белым */
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(1200px 700px at 50% -10%, rgba(255, 23, 68, .18), transparent 55%),
+        radial-gradient(900px 600px at 20% 110%, rgba(177, 0, 36, .20), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
 
-      /* запрет "резинки"/overscroll где возможно */
+      /* запрет "резинки" где поддерживается */
       overscroll-behavior: none;
     }
 
@@ -69,11 +71,10 @@
       mix-blend-mode: multiply;
     }
 
-    /* scroll container */
+    /* scroll */
     #a{
       position:fixed;
       inset:0;
-      /* динамический viewport — меньше артефактов с панелями браузера */
       height:100svh;
       height:100dvh;
 
@@ -83,12 +84,16 @@
       will-change:transform;
       z-index:3;
 
-      /* ещё раз запрет оверскролла */
       overscroll-behavior: none;
+      overscroll-behavior-y: none;
       touch-action: pan-y;
 
-      /* чтобы не "высвечивалось" */
-      background: transparent;
+      /* на всякий */
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(1200px 700px at 50% -10%, rgba(255, 23, 68, .18), transparent 55%),
+        radial-gradient(900px 600px at 20% 110%, rgba(177, 0, 36, .20), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
     }
     #a::-webkit-scrollbar{ display:none; }
 
@@ -98,10 +103,8 @@
       flex-direction:column;
       align-items:center;
       padding:24px 0 40px;
-      /* safe-area снизу (iOS/некоторые оболочки) */
-      padding-bottom: calc(40px + env(safe-area-inset-bottom));
-      /* safe-area сверху */
       padding-top: calc(24px + env(safe-area-inset-top));
+      padding-bottom: calc(40px + env(safe-area-inset-bottom));
       transform:translateZ(0);
     }
 
@@ -176,6 +179,7 @@
       position:relative;
     }
 
+    /* skeleton */
     .n{
       position:absolute;
       inset:0;
@@ -222,6 +226,7 @@
       font-weight:500;
     }
 
+    /* time NOT bold */
     .k{
       font-family:'Roboto Mono',monospace;
       font-size:18px;
@@ -265,7 +270,6 @@
   <canvas id="fx"></canvas>
   <div class="vignette"></div>
 
-  <!-- УБРАЛИ .m (она и была чёрным островком сверху) -->
   <div id="a"><div id="b"></div></div>
 
   <script>
@@ -468,15 +472,47 @@
     });
 
     /* ==========================================================
-       ULTRA OPTIMIZED PARTICLES
+       FIX: режем резинку/перетяжку (Chrome Android) чтобы не было белой полосы
+       ========================================================== */
+    (function(){
+      const scroller = document.getElementById('a');
+      let startY = 0;
+
+      scroller.addEventListener('touchstart', (e) => {
+        if (!e.touches || !e.touches[0]) return;
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      scroller.addEventListener('touchmove', (e) => {
+        if (!e.touches || !e.touches[0]) return;
+
+        const y = e.touches[0].clientY;
+        const dy = y - startY;
+
+        const top = scroller.scrollTop <= 0;
+        const bottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
+
+        // тянем вниз на самом верху -> блок
+        if (top && dy > 0) {
+          e.preventDefault();
+          return;
+        }
+        // тянем вверх в самом низу -> блок
+        if (bottom && dy < 0) {
+          e.preventDefault();
+          return;
+        }
+      }, { passive: false });
+    })();
+
+    /* ==========================================================
+       ULTRA OPTIMIZED PARTICLES (фикс ресетов на мобиле)
        ========================================================== */
     (function(){
       const canvas = document.getElementById('fx');
       const ctx = canvas.getContext('2d', { alpha:true });
 
       let DPR = Math.max(1, Math.min(1.5, window.devicePixelRatio || 1));
-      let prevW = innerWidth, prevH = innerHeight;
-      let resizeTimer = 0;
 
       function resize(){
         DPR = Math.max(1, Math.min(1.5, window.devicePixelRatio || 1));
@@ -613,7 +649,8 @@
         p.x = x;
         p.y = y;
 
-        p.vy = rand(28, 78);
+        /* на телефоне немного спокойнее скорость, чтобы реже "перерождались" */
+        p.vy = isMobile ? rand(22, 62) : rand(28, 78);
         p.vx = rand(-14, 14);
         p.rot = rand(0, Math.PI*2);
         p.vr  = rand(-1.4, 1.4);
@@ -631,11 +668,6 @@
         p.phase = (rnd() * MAX) | 0;
       }
 
-      function reseedAndRespawnAll(){
-        seed = (Date.now() ^ (innerWidth * 73856093) ^ (innerHeight * 19349663)) >>> 0;
-        for(let i=0;i<MAX;i++) resetParticle(particles[i], true);
-      }
-
       for(let i=0;i<MAX;i++){
         particles[i] = {
           baseX:0, baseY:0, x:0, y:0,
@@ -647,36 +679,43 @@
         resetParticle(particles[i], true);
       }
 
+      // ФИКС ресетов: НЕ респавним всё при "мелком resize" от адресной строки
+      let lastW = innerWidth;
+      let lastH = innerHeight;
+      const vv = window.visualViewport;
+
       function onResize(){
-        const w0 = prevW || innerWidth;
-        const h0 = prevH || innerHeight;
+        const w = innerWidth;
+        const h = innerHeight;
+
+        const dw = Math.abs(w - lastW);
+        const dh = Math.abs(h - lastH);
+
+        // высота немного прыгнула (адресная строка) -> не считаем настоящим resize
+        const toolbarResize = (dw === 0 && dh > 0 && dh < 120);
 
         resize();
 
-        const sx = innerWidth / w0;
-        const sy = innerHeight / h0;
-        for(let i=0;i<MAX;i++){
-          const p = particles[i];
-          p.baseX *= sx;
-          p.baseY *= sy;
-          p.x *= sx;
-          p.y *= sy;
+        if (!toolbarResize) {
+          const sx = w / (lastW || w);
+          const sy = h / (lastH || h);
+
+          for(let i=0;i<MAX;i++){
+            const p = particles[i];
+            p.baseX *= sx; p.baseY *= sy;
+            p.x *= sx;     p.y *= sy;
+          }
+          // ВАЖНО: НЕ делаем reseedAndRespawnAll()
         }
 
-        prevW = innerWidth;
-        prevH = innerHeight;
-
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          ctx.setTransform(DPR,0,0,DPR,0,0);
-          ctx.fillStyle = 'rgba(7, 8, 11, 1)';
-          ctx.fillRect(0, 0, innerWidth, innerHeight);
-          reseedAndRespawnAll();
-        }, 140);
+        lastW = w;
+        lastH = h;
       }
 
-      addEventListener('resize', onResize, { passive:true });
-      resize();
+      if (vv) vv.addEventListener('resize', onResize, { passive:true });
+      else addEventListener('resize', onResize, { passive:true });
+
+      onResize();
 
       let last = performance.now();
       let rafId = 0;
