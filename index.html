@@ -558,7 +558,11 @@
         return { canvas: c, half: size/2 };
       }
 
-      const MAX = 70;
+      // меньше частиц на телефонах / слабых устройствах
+const isMobile = matchMedia('(max-width: 600px)').matches || ('ontouchstart' in window);
+const isLowCPU = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+
+const MAX = isMobile ? (isLowCPU ? 18 : 26) : 70;
       const particles = new Array(MAX);
 
       const sinPhase = new Float32Array(MAX);
