@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>ShdMap</title>
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500" />
@@ -21,6 +21,7 @@
     @font-face{ font-family:cf; src:url(font.ttf) format(truetype); }
 
     *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
     html,body{
       height:100%;
       -webkit-user-select:none;
@@ -28,15 +29,20 @@
       -ms-user-select:none;
       user-select:none;
       -webkit-touch-callout:none;
+
+      /* ВАЖНО: чтобы при оверскролле не светилось белым */
+      background: radial-gradient(1200px 700px at 50% -10%, rgba(255, 23, 68, .18), transparent 55%),
+                  radial-gradient(900px 600px at 20% 110%, rgba(177, 0, 36, .20), transparent 60%),
+                  linear-gradient(180deg, var(--bg), var(--bg2));
+
+      /* запрет "резинки"/overscroll где возможно */
+      overscroll-behavior: none;
     }
 
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
       color:var(--text);
-      background: radial-gradient(1200px 700px at 50% -10%, rgba(255, 23, 68, .18), transparent 55%),
-                  radial-gradient(900px 600px at 20% 110%, rgba(177, 0, 36, .20), transparent 60%),
-                  linear-gradient(180deg, var(--bg), var(--bg2));
       overflow:hidden;
     }
 
@@ -63,27 +69,26 @@
       mix-blend-mode: multiply;
     }
 
-    /* top strip */
-    .m{
-      position:fixed;
-      top:0; left:0; right:0;
-      height:24px;
-      z-index:4;
-      background: rgba(0,0,0,.55);
-      pointer-events:none;
-    }
-
-    /* scroll */
+    /* scroll container */
     #a{
       position:fixed;
       inset:0;
+      /* динамический viewport — меньше артефактов с панелями браузера */
+      height:100svh;
+      height:100dvh;
+
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
       will-change:transform;
       z-index:3;
-      overscroll-behavior-y:none;
+
+      /* ещё раз запрет оверскролла */
+      overscroll-behavior: none;
       touch-action: pan-y;
+
+      /* чтобы не "высвечивалось" */
+      background: transparent;
     }
     #a::-webkit-scrollbar{ display:none; }
 
@@ -93,6 +98,10 @@
       flex-direction:column;
       align-items:center;
       padding:24px 0 40px;
+      /* safe-area снизу (iOS/некоторые оболочки) */
+      padding-bottom: calc(40px + env(safe-area-inset-bottom));
+      /* safe-area сверху */
+      padding-top: calc(24px + env(safe-area-inset-top));
       transform:translateZ(0);
     }
 
@@ -115,7 +124,6 @@
       margin:16px;
       padding:16px;
 
-      /* БОЛЕЕ ПРОЗРАЧНОЕ СТЕКЛО */
       background: rgba(8, 6, 12, .28);
       border:1px solid rgba(255, 23, 68, .18);
       box-shadow: var(--shadow), var(--glow);
@@ -133,7 +141,6 @@
       will-change: transform, opacity, filter;
     }
 
-    /* Блик стекла — чтобы реально было видно частицы позади */
     .e::before{
       content:"";
       position:absolute;
@@ -160,17 +167,15 @@
       align-items:center;
       justify-content:center;
 
-      border-radius:0;     /* УБРАЛИ */
-      overflow:visible;    /* УБРАЛИ CLIP */
+      border-radius:0;
+      overflow:visible;
 
-      /* слабее фон, чтоб не "глушил" blur */
       background: rgba(6,5,9,.10);
       border:1px solid rgba(255, 23, 68, .10);
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
       position:relative;
     }
 
-    /* skeleton (слабее) */
     .n{
       position:absolute;
       inset:0;
@@ -217,7 +222,6 @@
       font-weight:500;
     }
 
-    /* time NOT bold */
     .k{
       font-family:'Roboto Mono',monospace;
       font-size:18px;
@@ -261,7 +265,7 @@
   <canvas id="fx"></canvas>
   <div class="vignette"></div>
 
-  <div class="m"></div>
+  <!-- УБРАЛИ .m (она и была чёрным островком сверху) -->
   <div id="a"><div id="b"></div></div>
 
   <script>
@@ -464,7 +468,7 @@
     });
 
     /* ==========================================================
-       ULTRA OPTIMIZED PARTICLES (тосты удалены)
+       ULTRA OPTIMIZED PARTICLES
        ========================================================== */
     (function(){
       const canvas = document.getElementById('fx');
@@ -558,11 +562,11 @@
         return { canvas: c, half: size/2 };
       }
 
-      // меньше частиц на телефонах / слабых устройствах
-const isMobile = matchMedia('(max-width: 600px)').matches || ('ontouchstart' in window);
-const isLowCPU = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+      /* меньше частиц на телефоне */
+      const isMobile = matchMedia('(max-width: 600px)').matches || ('ontouchstart' in window);
+      const isLowCPU = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+      const MAX = isMobile ? (isLowCPU ? 18 : 26) : 70;
 
-const MAX = isMobile ? (isLowCPU ? 18 : 26) : 70;
       const particles = new Array(MAX);
 
       const sinPhase = new Float32Array(MAX);
